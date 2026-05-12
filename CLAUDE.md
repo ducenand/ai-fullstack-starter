@@ -7,7 +7,7 @@ pnpm + Turborepo monorepo，AI 全栈开发底座。核心 AI 逻辑在 `package
 ## 包结构
 
 | 包 | 职责 |
-|----|------|
+| -- | ---- |
 | `packages/ai-agent` | Claude API 封装：单轮、流式、agentic loop |
 | `packages/logger` | 结构化 JSON 日志 |
 | `packages/queue` | BullMQ 通用 Queue/Worker 工厂 |
@@ -37,11 +37,16 @@ pnpm dev
 
 ## 质量门（Stop hooks）
 
-每次会话结束自动运行（`.claude/settings.json`），失败则 `asyncRewake` 唤回：
-1. `pnpm -r run typecheck` — 全包 TypeScript 检查（timeout 120s）
-2. `pnpm --filter @starter/ai-agent test` — ai-agent 单元测试（timeout 60s）
+每次会话结束自动串行运行（`.claude/settings.json`）：
 
-**Claude 无法悄悄破坏构建**：错误输出自动传回，必须修复才能结束会话。
+| # | 门禁 | 失败行为 |
+|---|------|---------|
+| 1 | `pnpm -r run typecheck` — 全包 TS 检查 | asyncRewake — Claude 必须修 |
+| 2 | `pnpm --filter @starter/ai-agent test` — 单元测试 | asyncRewake — Claude 必须修 |
+| 3 | 源码-测试漂移检测 — pipeline.ts 改了但 test 没改 | asyncRewake — Claude 补测试 |
+| 4 | `git add -A && git commit` — 自动提交 | asyncRewake: false（静默，不阻断） |
+
+**流程语义**：1-3 任意一关失败 → Claude 被唤回修复 → 重新触发所有门禁 → 直到全部通过 → 第 4 关自动提交。
 
 ## 测试体系
 
@@ -50,6 +55,7 @@ pnpm dev
 **两种测试模式：**
 
 1. **直接导入**（exported 函数）
+
    ```ts
    import { runText } from "../pipeline.js";
    ```

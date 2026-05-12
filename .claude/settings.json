@@ -20,6 +20,22 @@
             "rewakeMessage": "Unit tests failed. Fix the following before finishing:",
             "rewakeSummary": "Unit test failures found",
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "DIFF=$(git diff HEAD --name-only 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null | grep '^packages/ai-agent/'); SRC=$(echo \"$DIFF\" | grep -E '^packages/ai-agent/src/[^/]+\\.ts$' | grep -v '__tests__' | sed 's|.*/||; s|\\.ts$||' | sort -u); [ -z \"$SRC\" ] && exit 0; WARN=''; while IFS= read -r mod; do echo \"$DIFF\" | grep -qF \"__tests__/${mod}.test.ts\" || WARN=\"$WARN $mod\"; done <<< \"$SRC\"; [ -n \"$WARN\" ] && echo \"Test drift detected: $WARN — source changed but test file not updated\" && exit 2; exit 0",
+            "asyncRewake": true,
+            "statusMessage": "Checking source-test drift...",
+            "rewakeMessage": "Source changed but test not updated. Update the test file to reflect the new logic:",
+            "rewakeSummary": "Test drift detected",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "git diff --quiet && git diff --staged --quiet && exit 0; git add -A && git commit -m \"chore: [auto] quality gates passed\" && echo \"Auto-committed.\"",
+            "asyncRewake": false,
+            "statusMessage": "Auto-committing passing state...",
+            "timeout": 30
           }
         ]
       }
