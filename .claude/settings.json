@@ -36,6 +36,13 @@
             "asyncRewake": false,
             "statusMessage": "Auto-committing passing state...",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "LAST_MSG=$(git log -1 --format='%s' 2>/dev/null); [ \"$LAST_MSG\" = \"chore: [auto] quality gates passed\" ] || exit 0; NEW=$(node -e \"const fs=require('fs');const p=JSON.parse(fs.readFileSync('packages/ai-agent/package.json','utf8'));const v=p.version.split('.');v[2]=String(Number(v[2])+1);p.version=v.join('.');fs.writeFileSync('packages/ai-agent/package.json',JSON.stringify(p,null,2)+'\\n');console.log(p.version);\"); git add packages/ai-agent/package.json && git commit -m \"chore: bump version to v${NEW}\" && git tag -a \"v${NEW}\" -m \"v${NEW}\" && echo \"Tagged v${NEW}\"",
+            "asyncRewake": false,
+            "statusMessage": "Bumping version and tagging...",
+            "timeout": 30
           }
         ]
       }

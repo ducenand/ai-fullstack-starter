@@ -45,8 +45,9 @@ pnpm dev
 | 2 | `pnpm --filter @starter/ai-agent test` — 单元测试 | asyncRewake — Claude 必须修 |
 | 3 | 源码-测试漂移检测 — pipeline.ts 改了但 test 没改 | asyncRewake — Claude 补测试 |
 | 4 | `git add -A && git commit` — 自动提交 | asyncRewake: false（静默，不阻断） |
+| 5 | patch 版本自动 bump + `git tag v{x.y.z}` — 仅当第 4 关实际产生提交时触发 | asyncRewake: false（静默，不阻断） |
 
-**流程语义**：1-3 任意一关失败 → Claude 被唤回修复 → 重新触发所有门禁 → 直到全部通过 → 第 4 关自动提交。
+**流程语义**：1-3 任意一关失败 → Claude 被唤回修复 → 重新触发所有门禁 → 直到全部通过 → 第 4 关自动提交 → 第 5 关 bump patch 并打 tag。
 
 ## 测试体系
 
