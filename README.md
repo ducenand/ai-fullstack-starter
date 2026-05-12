@@ -1,5 +1,7 @@
 # AI Fullstack Starter
 
+[中文文档](README.zh-CN.md)
+
 Production-ready monorepo template for building AI applications with Claude.
 
 ```bash
