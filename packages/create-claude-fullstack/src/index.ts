@@ -33,6 +33,7 @@ async function main() {
             if (!v) return "Required";
             if (!/^[a-z0-9-_]+$/i.test(v)) return "Use letters, numbers, hyphens, underscores only";
             if (existsSync(resolve(process.cwd(), v))) return `Directory "${v}" already exists`;
+            return undefined;
           },
         }),
 
