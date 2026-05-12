@@ -1,8 +1,16 @@
 {
   "name": "create-claude-fullstack",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Scaffold a production-ready AI full-stack monorepo (Next.js 15 + Claude API + Prisma + BullMQ)",
-  "keywords": ["ai", "claude", "nextjs", "monorepo", "fullstack", "starter", "template"],
+  "keywords": [
+    "ai",
+    "claude",
+    "nextjs",
+    "monorepo",
+    "fullstack",
+    "starter",
+    "template"
+  ],
   "author": "",
   "license": "MIT",
   "repository": {
@@ -15,7 +23,9 @@
   "bin": {
     "create-claude-fullstack": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
