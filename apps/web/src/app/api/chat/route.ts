@@ -49,7 +49,7 @@ export async function POST(request: Request): Promise<Response> {
               }})}\n\n`),
             );
             logger.info("chat_done", {
-              userId: session.user.id,
+              userId: session.user?.id,
               requestId,
               inputTokens: chunk.result.inputTokens,
               outputTokens: chunk.result.outputTokens,
