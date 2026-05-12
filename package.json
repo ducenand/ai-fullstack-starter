@@ -1,0 +1,22 @@
+{
+  "name": "ai-fullstack-starter",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "db:generate": "pnpm --filter @starter/web db:generate",
+    "db:migrate": "pnpm --filter @starter/web db:migrate",
+    "db:push": "pnpm --filter @starter/web db:push"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.3"
+  }
+}
