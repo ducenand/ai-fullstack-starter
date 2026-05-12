@@ -7,7 +7,11 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "schema": "../web/prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
