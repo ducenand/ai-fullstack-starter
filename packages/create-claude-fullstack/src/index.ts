@@ -5,7 +5,7 @@ import { existsSync, readFileSync, writeFileSync, readdirSync, statSync } from "
 import { join, resolve } from "node:path";
 import kleur from "kleur";
 
-const GITHUB_REPO = "16679192/ai-fullstack-starter";
+const GITHUB_REPO = "ducenand/ai-fullstack-starter";
 const TEMPLATE_REF = "main";
 
 interface Options {
