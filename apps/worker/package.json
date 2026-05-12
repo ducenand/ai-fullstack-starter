@@ -10,9 +10,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "postinstall": "prisma generate"
   },
-  "prisma": {
-    "schema": "../web/prisma/schema.prisma"
-  },
   "dependencies": {
     "@prisma/client": "^6.6.0",
     "@starter/ai-agent": "workspace:*",
