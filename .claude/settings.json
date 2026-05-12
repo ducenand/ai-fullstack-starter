@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "output=$(pnpm -r run typecheck 2>&1); code=$?; echo \"$output\"; [ $code -eq 0 ] && exit 0 || exit 2",
+            "asyncRewake": true,
+            "statusMessage": "TypeChecking all packages...",
+            "rewakeMessage": "TypeCheck failed. Fix the following errors before finishing:",
+            "rewakeSummary": "TypeCheck errors found",
+            "timeout": 120
+          },
+          {
+            "type": "command",
+            "command": "output=$(pnpm --filter @starter/ai-agent test 2>&1); code=$?; echo \"$output\"; [ $code -eq 0 ] && exit 0 || exit 2",
+            "asyncRewake": true,
+            "statusMessage": "Running ai-agent tests...",
+            "rewakeMessage": "Unit tests failed. Fix the following before finishing:",
+            "rewakeSummary": "Unit test failures found",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
