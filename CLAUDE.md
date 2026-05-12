@@ -37,16 +37,47 @@ pnpm dev
 
 ## 质量门（Stop hooks）
 
-每次会话结束自动运行（`.claude/settings.json`）：
-1. `turbo typecheck` — 全包 TypeScript 检查
-2. `pnpm --filter @starter/ai-agent test` — ai-agent 单元测试
+每次会话结束自动运行（`.claude/settings.json`），失败则 `asyncRewake` 唤回：
+1. `pnpm -r run typecheck` — 全包 TypeScript 检查（timeout 120s）
+2. `pnpm --filter @starter/ai-agent test` — ai-agent 单元测试（timeout 60s）
+
+**Claude 无法悄悄破坏构建**：错误输出自动传回，必须修复才能结束会话。
 
 ## 测试体系
 
 运行单包测试：`pnpm --filter @starter/ai-agent test`
 
-- **直接导入** — 有公开 API 的函数，如 `runText`、`runStream`
-- **内联复制** — 私有函数的逻辑测试，顶部注释来源
+**两种测试模式：**
+
+1. **直接导入**（exported 函数）
+   ```ts
+   import { runText } from "../pipeline.js";
+   ```
+
+2. **内联复制**（private 函数）— 顶部注释标注来源，改源码时须手动同步
+
+**客户端注入模式（核心规则）：**
+
+`runText`、`runStream`、`runAgentLoop` 均接受可选 `_client` 参数。
+测试时注入 mock，**无需 `ANTHROPIC_API_KEY`，无网络请求**：
+
+```ts
+const create = mock.fn(async () => fakeResponse("ok"));
+const fakeClient = { messages: { create } } as any;
+await runText(messages, config, fakeClient);
+```
+
+**Node.js 原生 mock 规则：**
+
+```ts
+// ✓ 多次返回值 — 闭包数组
+const responses = [toolResp, finalResp];
+let i = 0;
+const create = mock.fn(async () => responses[i++]);
+
+// ✗ 不要用 mockImplementationOnce — 那是 Jest API
+create.mock.mockImplementationOnce(...); // TypeError
+```
 
 ## 常见任务入口
 

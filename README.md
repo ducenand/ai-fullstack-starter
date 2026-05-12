@@ -105,11 +105,70 @@ The `apps/web` directory is a standard Next.js app. Deploy to Vercel, Railway, F
 
 The `apps/worker` is a Node.js process. Run it alongside your web app (`node dist/index.js`).
 
-## Quality gates
+## Quality gates (Claude Code harness)
 
-The `.claude/settings.json` configures Stop hooks for Claude Code:
-1. `turbo typecheck` — TypeScript check across all packages
-2. `pnpm --filter @starter/ai-agent test` — ai-agent unit tests
+`.claude/settings.json` wires three Stop hooks that run automatically when Claude Code finishes a session:
+
+| Hook | Command | Failure action |
+|------|---------|---------------|
+| TypeCheck | `pnpm -r run typecheck` | `asyncRewake` — Claude is pulled back to fix errors |
+| Unit tests | `pnpm --filter @starter/ai-agent test` | `asyncRewake` — Claude is pulled back to fix failures |
+
+This means **Claude cannot silently break the build** — it gets re-woken with the error output and must fix it before the session ends.
+
+## Testing patterns
+
+Tests live in `packages/ai-agent/src/__tests__/`. Run them:
+
+```bash
+pnpm --filter @starter/ai-agent test
+```
+
+### Client injection (no API key needed)
+
+All three pipeline functions accept an optional `_client` parameter. Inject a mock in tests — no `ANTHROPIC_API_KEY` required, no network calls:
+
+```typescript
+import { runText, runAgentLoop } from "@starter/ai-agent";
+import { mock } from "node:test";
+
+const create = mock.fn(async () => ({
+  content: [{ type: "text", text: "Hello!" }],
+  stop_reason: "end_turn",
+  usage: { input_tokens: 10, output_tokens: 5, ... },
+}));
+
+const fakeClient = { messages: { create } } as any;
+
+const result = await runText(messages, config, fakeClient);
+// assert result.text === "Hello!"
+```
+
+### Multiple return values (Node.js native mock)
+
+Node.js `mock.fn()` has no `mockImplementationOnce`. Use a closure array instead:
+
+```typescript
+// ✓ correct — closure array
+const responses = [toolResponse, finalResponse];
+let i = 0;
+const create = mock.fn(async () => responses[i++]);
+
+// ✗ wrong — jest API, not available in Node.js test runner
+create.mock.mockImplementationOnce(...);
+```
+
+### What to test
+
+| Scenario | What to assert |
+|----------|---------------|
+| `runText` happy path | `result.text`, `result.inputTokens` |
+| multi-block response | text blocks are concatenated |
+| `cache: true` | `system` is an array with `cache_control: { type: "ephemeral" }` |
+| `tools: undefined` | `tools` key is absent from the API call body |
+| `runAgentLoop` end_turn | single API call, correct text returned |
+| `runAgentLoop` tool use | executor called, loop continues, tokens accumulated |
+| `runAgentLoop` maxTurns | throws `/maxTurns/` error |
 
 ## License
 

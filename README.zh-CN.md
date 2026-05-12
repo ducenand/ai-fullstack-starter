@@ -43,9 +43,10 @@ npx create-claude-fullstack my-app
 cd my-app
 
 # 2. 配置环境变量
-cp .env.example apps/web/.env.local
+cp .env.example apps/web/.env          # Prisma CLI 读取（migrate/generate）
+cp .env.example apps/web/.env.local    # Next.js 运行时读取
 cp .env.example apps/worker/.env
-# 编辑文件，填写 ANTHROPIC_API_KEY + AUTH_SECRET
+# 编辑以上三个文件，填写 ANTHROPIC_API_KEY + AUTH_SECRET
 
 # 3. 启动基础设施
 docker compose up -d       # PostgreSQL + Redis
@@ -102,11 +103,68 @@ $ npx create-claude-fullstack
 
 `apps/worker` 是独立 Node.js 进程，与 Web 应用并行运行（`node dist/index.js`）。
 
-## 质量门控
+## 质量门控（Claude Code Harness）
 
-`.claude/settings.json` 为 Claude Code 配置了 Stop hooks：
-1. `turbo typecheck` — 全包 TypeScript 检查
-2. `pnpm --filter @starter/ai-agent test` — ai-agent 单元测试
+`.claude/settings.json` 配置了三道 Stop hooks，Claude Code 每次会话结束后自动运行：
+
+| Hook | 命令 | 失败行为 |
+|------|------|---------|
+| TypeCheck | `pnpm -r run typecheck` | `asyncRewake` — Claude 被唤回修复错误 |
+| 单元测试 | `pnpm --filter @starter/ai-agent test` | `asyncRewake` — Claude 被唤回修复失败用例 |
+
+这意味着 **Claude 无法悄悄破坏构建** — 错误输出会被传回，Claude 必须修复后才能结束会话。
+
+## 测试体系
+
+测试文件位于 `packages/ai-agent/src/__tests__/`，运行：
+
+```bash
+pnpm --filter @starter/ai-agent test
+```
+
+### 客户端注入（无需 API Key）
+
+三个 pipeline 函数均接受可选的 `_client` 参数，测试时注入 mock，不发起真实网络请求：
+
+```typescript
+import { runText, runAgentLoop } from "@starter/ai-agent";
+import { mock } from "node:test";
+
+const create = mock.fn(async () => ({
+  content: [{ type: "text", text: "你好！" }],
+  stop_reason: "end_turn",
+  usage: { input_tokens: 10, output_tokens: 5, ... },
+}));
+
+const fakeClient = { messages: { create } } as any;
+const result = await runText(messages, config, fakeClient);
+```
+
+### 多次返回值（Node.js 原生 mock）
+
+Node.js 的 `mock.fn()` 没有 `mockImplementationOnce`（那是 Jest API），用闭包数组代替：
+
+```typescript
+// ✓ 正确 — 闭包数组
+const responses = [toolResponse, finalResponse];
+let i = 0;
+const create = mock.fn(async () => responses[i++]);
+
+// ✗ 错误 — Jest API，Node.js test runner 不支持
+create.mock.mockImplementationOnce(...);
+```
+
+### 测试覆盖要点
+
+| 场景 | 断言目标 |
+|------|---------|
+| `runText` 正常返回 | `result.text`、`result.inputTokens` |
+| 多个 text block | 文本块正确拼接 |
+| `cache: true` | `system` 为含 `cache_control` 的数组 |
+| `tools` 未定义 | API 调用体中不含 `tools` 字段 |
+| `runAgentLoop` end_turn | 单轮调用，文本正确返回 |
+| `runAgentLoop` 工具调用 | executor 被调用、循环继续、token 累加 |
+| `runAgentLoop` 超出 maxTurns | 抛出含 `/maxTurns/` 的错误 |
 
 ## 许可证
 
