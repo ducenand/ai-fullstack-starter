@@ -1,10 +1,8 @@
 {
   "name": "@starter/ai-agent",
   "version": "0.0.2",
+  "private": true,
   "type": "module",
-  "files": [
-    "dist"
-  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
