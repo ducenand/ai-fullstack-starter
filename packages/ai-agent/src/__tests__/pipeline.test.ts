@@ -55,20 +55,20 @@ describe("runText", () => {
   });
 
   it("cache=true 时 system 为带 cache_control 的数组", async () => {
-    const create = mock.fn(async () => fakeResponse("ok"));
+    const create = mock.fn(async (_: unknown) => fakeResponse("ok"));
     await runText([{ role: "user", content: "Hi" }], { ...CONFIG, cache: true }, makeClient(create));
 
-    const body = create.mock.calls[0].arguments[0] as Record<string, unknown>;
+    const body = create.mock.calls[0]!.arguments[0] as Record<string, unknown>;
     const system = body["system"] as Array<{ cache_control?: unknown }>;
     assert.ok(Array.isArray(system));
-    assert.deepEqual(system[0].cache_control, { type: "ephemeral" });
+    assert.deepEqual(system[0]!.cache_control, { type: "ephemeral" });
   });
 
   it("tools 为 undefined 时不传 tools 字段", async () => {
-    const create = mock.fn(async () => fakeResponse("ok"));
+    const create = mock.fn(async (_: unknown) => fakeResponse("ok"));
     await runText([{ role: "user", content: "Hi" }], CONFIG, makeClient(create));
 
-    const body = create.mock.calls[0].arguments[0] as Record<string, unknown>;
+    const body = create.mock.calls[0]!.arguments[0] as Record<string, unknown>;
     assert.equal("tools" in body, false);
   });
 });
