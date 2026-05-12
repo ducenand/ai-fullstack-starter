@@ -21,7 +21,7 @@ export async function runText(
     max_tokens: config.maxTokens ?? 4096,
     system: systemParam,
     messages,
-    tools: config.tools,
+    ...(config.tools ? { tools: config.tools } : {}),
   });
 
   const text = response.content
@@ -129,7 +129,7 @@ export async function runAgentLoop(
       max_tokens: config.maxTokens ?? 4096,
       system: systemParam,
       messages: history,
-      tools: config.tools,
+      ...(config.tools ? { tools: config.tools } : {}),
     });
 
     const usage = response.usage as Anthropic.Usage & {

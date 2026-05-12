@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 export type Message = Anthropic.MessageParam;
-export type Tool = Anthropic.Tool;
+export type Tool = Anthropic.Messages.ToolUnion;
 export type ContentBlock = Anthropic.ContentBlock;
 export type TextBlock = Anthropic.TextDelta;
 

@@ -6,7 +6,9 @@ export function createQueue<TData>(name: string) {
   const queue = new Queue<TData>(name, { connection });
 
   async function enqueue(data: TData, opts?: JobsOptions) {
-    return queue.add(name, data, { attempts: 3, backoff: { type: "exponential", delay: 1000 }, ...opts });
+    // BullMQ v5: ExtractNameType/ExtractDataType can't narrow unconstrained generic TData
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (queue as any).add(name, data, { attempts: 3, backoff: { type: "exponential", delay: 1000 }, ...opts });
   }
 
   function createWorker(processor: Processor<TData>) {
