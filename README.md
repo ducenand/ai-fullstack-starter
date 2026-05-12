@@ -45,9 +45,10 @@ npx create-claude-fullstack my-app
 cd my-app
 
 # 2. Environment
-cp .env.example apps/web/.env.local
+cp .env.example apps/web/.env          # Prisma CLI reads this
+cp .env.example apps/web/.env.local    # Next.js runtime reads this
 cp .env.example apps/worker/.env
-# Edit: set ANTHROPIC_API_KEY + AUTH_SECRET
+# Edit all three: set ANTHROPIC_API_KEY + AUTH_SECRET
 
 # 3. Infra
 docker compose up -d       # PostgreSQL + Redis

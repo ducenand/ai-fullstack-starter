@@ -21,7 +21,8 @@ pnpm + Turborepo monorepo，AI 全栈开发底座。核心 AI 逻辑在 `package
 pnpm install
 
 # 2. 复制并填写环境变量
-cp .env.example apps/web/.env.local
+cp .env.example apps/web/.env          # Prisma CLI（migrate/generate）读取
+cp .env.example apps/web/.env.local    # Next.js 运行时读取
 cp .env.example apps/worker/.env
 
 # 3. 启动 PostgreSQL + Redis
