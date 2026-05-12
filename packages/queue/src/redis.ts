@@ -1,4 +1,4 @@
-import { Redis } from "bullmq";
+import Redis from "ioredis";
 
 export function createRedisConnection(): Redis {
   const url = process.env["REDIS_URL"];
