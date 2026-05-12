@@ -8,8 +8,9 @@ import type { PipelineConfig, RunResult, Message, StreamChunk } from "./types.js
 export async function runText(
   messages: Message[],
   config: PipelineConfig,
+  _client?: ReturnType<typeof getClient>,
 ): Promise<RunResult> {
-  const client = getClient();
+  const client = _client ?? getClient();
   const model = config.model ?? DEFAULT_MODEL;
 
   const systemParam: Anthropic.MessageCreateParams["system"] = config.cache
@@ -50,8 +51,9 @@ export async function runText(
 export async function* runStream(
   messages: Message[],
   config: PipelineConfig,
+  _client?: ReturnType<typeof getClient>,
 ): AsyncGenerator<StreamChunk> {
-  const client = getClient();
+  const client = _client ?? getClient();
   const model = config.model ?? DEFAULT_MODEL;
 
   const systemParam: Anthropic.MessageCreateParams["system"] = config.cache
@@ -109,8 +111,9 @@ export async function runAgentLoop(
   config: PipelineConfig,
   toolExecutors: Record<string, (input: unknown) => Promise<unknown>>,
   maxTurns = 10,
+  _client?: ReturnType<typeof getClient>,
 ): Promise<RunResult> {
-  const client = getClient();
+  const client = _client ?? getClient();
   const model = config.model ?? DEFAULT_MODEL;
   const history = [...messages];
   let totalInput = 0;
