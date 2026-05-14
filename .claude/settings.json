@@ -32,6 +32,24 @@
           },
           {
             "type": "command",
+            "command": "bash .claude/scripts/fe-lint.sh",
+            "asyncRewake": true,
+            "statusMessage": "Linting frontend (complexity / lines / nesting)...",
+            "rewakeMessage": "Frontend lint failed. Fix the following quality issues before finishing:",
+            "rewakeSummary": "Frontend lint errors found",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/fe-drift.sh",
+            "asyncRewake": true,
+            "statusMessage": "Checking frontend component-test drift...",
+            "rewakeMessage": "Frontend component changed without a test file. Add tests for the main user flow:",
+            "rewakeSummary": "Frontend test drift detected",
+            "timeout": 15
+          },
+          {
+            "type": "command",
             "command": "git diff --quiet && git diff --staged --quiet && exit 0; git add -A && git commit -m \"chore: [auto] quality gates passed\" && echo \"Auto-committed.\"",
             "asyncRewake": false,
             "statusMessage": "Auto-committing passing state...",

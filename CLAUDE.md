@@ -44,10 +44,24 @@ pnpm dev
 | 1 | `pnpm -r run typecheck` — 全包 TS 检查 | asyncRewake — Claude 必须修 |
 | 2 | `pnpm --filter @starter/ai-agent test` — 单元测试 | asyncRewake — Claude 必须修 |
 | 3 | 源码-测试漂移检测 — pipeline.ts 改了但 test 没改 | asyncRewake — Claude 补测试 |
-| 4 | `git add -A && git commit` — 自动提交 | asyncRewake: false（静默，不阻断） |
-| 5 | patch 版本自动 bump + `git tag v{x.y.z}` — 仅当第 4 关实际产生提交时触发 | asyncRewake: false（静默，不阻断） |
+| 4 | `pnpm --filter @starter/web lint` — 前端质量检查（仅当 `apps/web/src/` 有改动时触发） | asyncRewake — Claude 必须修 |
+| 5 | 前端组件-测试漂移检测 — `components/*.tsx` 改了但无对应测试文件 | asyncRewake — Claude 补测试 |
+| 6 | `git add -A && git commit` — 自动提交 | asyncRewake: false（静默，不阻断） |
+| 7 | patch 版本自动 bump + `git tag v{x.y.z}` — 仅当第 6 关实际产生提交时触发 | asyncRewake: false（静默，不阻断） |
 
-**流程语义**：1-3 任意一关失败 → Claude 被唤回修复 → 重新触发所有门禁 → 直到全部通过 → 第 4 关自动提交 → 第 5 关 bump patch 并打 tag。
+**流程语义**：1-5 任意一关失败 → Claude 被唤回修复 → 重新触发所有门禁 → 直到全部通过 → 第 6 关自动提交 → 第 7 关 bump patch 并打 tag。
+
+## 前端质量规则（`apps/web/eslint.config.mjs`）
+
+| 规则 | 级别 | 说明 |
+|------|------|------|
+| `complexity ≤ 10` | error | 圈复杂度超限必须拆分函数 |
+| `max-lines ≤ 600` | error | 单文件行数（不含空行/注释）不超过 600 |
+| `max-depth ≤ 4` | error | 嵌套层数超限须提取函数或组件 |
+| `max-params ≤ 4` | warn | 参数过多时改用 options 对象 |
+| `no-magic-numbers` | warn | 魔法数字提取为具名常量 |
+
+**前端测试约定**：组件测试放 `apps/web/src/__tests__/<ComponentName>.test.tsx` 或 `apps/web/src/components/__tests__/<ComponentName>.test.tsx`，覆盖主流程，防止回归。
 
 ## 测试体系
 
