@@ -7,7 +7,8 @@ const __dirname = dirname(__filename);
 
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
-export default [
+/** @type {import("eslint").Linter.Config[]} */
+const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 
   // Quality gates — applied only to hand-written source files
@@ -43,3 +44,5 @@ export default [
     },
   },
 ];
+
+export default eslintConfig;
