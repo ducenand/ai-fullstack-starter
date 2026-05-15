@@ -107,16 +107,33 @@ The `apps/worker` is a Node.js process. Run it alongside your web app (`node dis
 
 ## Quality gates (Claude Code harness)
 
-`.claude/settings.json` wires three Stop hooks that run automatically when Claude Code finishes a session:
+`.claude/settings.json` wires seven Stop hooks that run automatically when Claude Code finishes a session:
 
-| Hook | Command | Failure action |
-|------|---------|---------------|
-| TypeCheck | `pnpm -r run typecheck` | `asyncRewake` — Claude is pulled back to fix errors |
-| Unit tests | `pnpm --filter @starter/ai-agent test` | `asyncRewake` — Claude is pulled back to fix failures |
+| # | Gate | Failure action |
+|---|------|---------------|
+| 1 | `pnpm -r run typecheck` — full TypeScript check | `asyncRewake` — Claude fixes errors |
+| 2 | `pnpm --filter @starter/ai-agent test` — unit tests | `asyncRewake` — Claude fixes failures |
+| 3 | Source-test drift — `pipeline.ts` changed but test not updated | `asyncRewake` — Claude adds tests |
+| 4 | `pnpm --filter @starter/web lint` — frontend quality (only when `apps/web/src/` changed) | `asyncRewake` — Claude fixes lint errors |
+| 5 | Frontend drift — component changed without test update (>15 lines diff) | `asyncRewake` — Claude updates tests |
+| 6 | `git add -A && git commit` — auto-commit | silent |
+| 7 | Patch version bump + `git tag` + `git push` | silent |
 
-This means **Claude cannot silently break the build** — it gets re-woken with the error output and must fix it before the session ends.
+**Claude cannot silently break the build** — it gets re-woken with the error output and must fix it before the session ends.
+
+### Frontend quality rules (`apps/web/eslint.config.mjs`)
+
+| Rule | Level | Description |
+|------|-------|-------------|
+| `complexity ≤ 10` | error | Split functions that exceed cyclomatic complexity 10 |
+| `max-lines ≤ 600` | error | Split files that exceed 600 non-blank/non-comment lines |
+| `max-depth ≤ 4` | error | Extract deeply nested logic into helpers |
+| `max-params ≤ 4` | warn | Use an options object for long parameter lists |
+| `no-magic-numbers` | warn | Extract numeric literals to named constants |
 
 ## Testing patterns
+
+### AI agent unit tests
 
 Tests live in `packages/ai-agent/src/__tests__/`. Run them:
 
@@ -169,6 +186,33 @@ create.mock.mockImplementationOnce(...);
 | `runAgentLoop` end_turn | single API call, correct text returned |
 | `runAgentLoop` tool use | executor called, loop continues, tokens accumulated |
 | `runAgentLoop` maxTurns | throws `/maxTurns/` error |
+
+### Frontend E2E tests (Playwright)
+
+E2E specs live in `apps/web/e2e/`. Run them:
+
+```bash
+# First-time: install the browser binary
+pnpm --filter @starter/web exec playwright install chromium
+
+# Run all E2E tests (starts Next.js on port 3001 automatically)
+pnpm --filter @starter/web test:e2e
+```
+
+The test server starts on **port 3001** with `PLAYWRIGHT_TEST_MODE=1` so it never conflicts with a dev server already running on 3000.
+
+`/e2e-chat-test` is a test-only page that renders `<Chat />` without auth — only accessible when `PLAYWRIGHT_TEST_MODE=1`. Use `page.route('/api/chat', ...)` to mock the SSE response:
+
+```typescript
+await page.route("/api/chat", (route) =>
+  route.fulfill({
+    status: 200,
+    headers: { "Content-Type": "text/event-stream" },
+    body: 'data: {"text":"Hello!"}\n\ndata: {"done":true}\n\n',
+  }),
+);
+await page.goto("/e2e-chat-test");
+```
 
 ## License
 

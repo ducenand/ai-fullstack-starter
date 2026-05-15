@@ -105,16 +105,33 @@ $ npx create-claude-fullstack
 
 ## 质量门控（Claude Code Harness）
 
-`.claude/settings.json` 配置了三道 Stop hooks，Claude Code 每次会话结束后自动运行：
+`.claude/settings.json` 配置了七道 Stop hooks，Claude Code 每次会话结束后自动串行运行：
 
-| Hook | 命令 | 失败行为 |
-|------|------|---------|
-| TypeCheck | `pnpm -r run typecheck` | `asyncRewake` — Claude 被唤回修复错误 |
-| 单元测试 | `pnpm --filter @starter/ai-agent test` | `asyncRewake` — Claude 被唤回修复失败用例 |
+| # | 门禁 | 失败行为 |
+|---|------|---------|
+| 1 | `pnpm -r run typecheck` — 全包 TS 检查 | asyncRewake — Claude 修复错误 |
+| 2 | `pnpm --filter @starter/ai-agent test` — 单元测试 | asyncRewake — Claude 修复失败用例 |
+| 3 | 源码-测试漂移 — `pipeline.ts` 改了但 test 未同步 | asyncRewake — Claude 补测试 |
+| 4 | `pnpm --filter @starter/web lint` — 前端质量检查（仅 `apps/web/src/` 有改动时触发） | asyncRewake — Claude 修复 lint 错误 |
+| 5 | 前端漂移 — 组件改动超 15 行但测试未更新 | asyncRewake — Claude 更新测试 |
+| 6 | `git add -A && git commit` — 自动提交 | 静默 |
+| 7 | patch 版本自动 bump + `git tag` + `git push` | 静默 |
 
-这意味着 **Claude 无法悄悄破坏构建** — 错误输出会被传回，Claude 必须修复后才能结束会话。
+**Claude 无法悄悄破坏构建** — 错误输出会被传回，Claude 必须修复后才能结束会话。
+
+### 前端质量规则（`apps/web/eslint.config.mjs`）
+
+| 规则 | 级别 | 说明 |
+|------|------|------|
+| `complexity ≤ 10` | error | 圈复杂度超限必须拆分函数 |
+| `max-lines ≤ 600` | error | 单文件行数（不含空行/注释）不超过 600 |
+| `max-depth ≤ 4` | error | 嵌套层数超限须提取函数或组件 |
+| `max-params ≤ 4` | warn | 参数过多时改用 options 对象 |
+| `no-magic-numbers` | warn | 魔法数字提取为具名常量 |
 
 ## 测试体系
+
+### AI agent 单元测试
 
 测试文件位于 `packages/ai-agent/src/__tests__/`，运行：
 
@@ -165,6 +182,33 @@ create.mock.mockImplementationOnce(...);
 | `runAgentLoop` end_turn | 单轮调用，文本正确返回 |
 | `runAgentLoop` 工具调用 | executor 被调用、循环继续、token 累加 |
 | `runAgentLoop` 超出 maxTurns | 抛出含 `/maxTurns/` 的错误 |
+
+### 前端 E2E 测试（Playwright）
+
+E2E 测试文件位于 `apps/web/e2e/`，运行：
+
+```bash
+# 首次使用：安装浏览器二进制
+pnpm --filter @starter/web exec playwright install chromium
+
+# 运行所有 E2E 测试（自动在 3001 端口启动 Next.js）
+pnpm --filter @starter/web test:e2e
+```
+
+测试服务器固定使用 **3001 端口**并注入 `PLAYWRIGHT_TEST_MODE=1`，不会与已运行在 3000 端口的开发服务器冲突。
+
+`/e2e-chat-test` 是仅在测试模式下可访问的页面，直接渲染 `<Chat />` 而无需登录。用 `page.route()` mock SSE 响应即可测试完整的对话交互：
+
+```typescript
+await page.route("/api/chat", (route) =>
+  route.fulfill({
+    status: 200,
+    headers: { "Content-Type": "text/event-stream" },
+    body: 'data: {"text":"你好！"}\n\ndata: {"done":true}\n\n',
+  }),
+);
+await page.goto("/e2e-chat-test");
+```
 
 ## 许可证
 
