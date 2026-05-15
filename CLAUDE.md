@@ -45,7 +45,7 @@ pnpm dev
 | 2 | `pnpm --filter @starter/ai-agent test` — 单元测试 | asyncRewake — Claude 必须修 |
 | 3 | 源码-测试漂移检测 — pipeline.ts 改了但 test 没改 | asyncRewake — Claude 补测试 |
 | 4 | `pnpm --filter @starter/web lint` — 前端质量检查（仅当 `apps/web/src/` 有改动时触发） | asyncRewake — Claude 必须修 |
-| 5 | 前端组件-测试漂移检测 — `components/*.tsx` 改了但无对应测试文件 | asyncRewake — Claude 补测试 |
+| 5 | 前端组件-测试漂移检测 — `components/*.tsx` 改了但无对应测试文件；或改动超 15 行但测试未同步更新 | asyncRewake — Claude 补/更新测试 |
 | 6 | `git add -A && git commit` — 自动提交 | asyncRewake: false（静默，不阻断） |
 | 7 | patch 版本自动 bump + `git tag v{x.y.z}` — 仅当第 6 关实际产生提交时触发 | asyncRewake: false（静默，不阻断） |
 
