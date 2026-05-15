@@ -8,7 +8,7 @@ export default defineConfig({
   ...(process.env["CI"] ? { workers: 1 } : {}),
   reporter: process.env["CI"] ? "github" : "list",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:3001",
     trace: "on-first-retry",
   },
   projects: [
@@ -19,9 +19,9 @@ export default defineConfig({
   ],
   webServer: {
     command: "pnpm dev",
-    url: "http://localhost:3000",
+    url: "http://localhost:3001",
     reuseExistingServer: !process.env["CI"],
-    env: { PLAYWRIGHT_TEST_MODE: "1" },
+    env: { PLAYWRIGHT_TEST_MODE: "1", PORT: "3001" },
     timeout: 120_000,
   },
 });
