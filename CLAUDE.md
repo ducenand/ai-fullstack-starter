@@ -61,7 +61,16 @@ pnpm dev
 | `max-params ≤ 4` | warn | 参数过多时改用 options 对象 |
 | `no-magic-numbers` | warn | 魔法数字提取为具名常量 |
 
-**前端测试约定**：组件测试放 `apps/web/src/__tests__/<ComponentName>.test.tsx` 或 `apps/web/src/components/__tests__/<ComponentName>.test.tsx`，覆盖主流程，防止回归。
+**前端测试约定**：
+
+- **E2E（Playwright）**：主流程放 `apps/web/e2e/<feature>.spec.ts`，用 `page.route()` mock `/api/chat` 等后端接口，无需真实数据库或 OAuth。运行：`pnpm --filter @starter/web test:e2e`
+- **组件单元测试**：放 `apps/web/src/__tests__/<ComponentName>.test.tsx` 或 `apps/web/src/components/__tests__/<ComponentName>.test.tsx`
+- 漂移检测（Gate 5）：改了 `components/*.tsx` 后，必须有对应的 E2E spec 或单元测试，否则 Claude 被唤回补测试
+
+**E2E 测试模式（`PLAYWRIGHT_TEST_MODE=1`）**：
+
+`playwright.config.ts` 启动 webServer 时自动注入 `PLAYWRIGHT_TEST_MODE=1`。
+`/e2e-chat-test` 页面仅在此模式下可访问，直接渲染 `<Chat />` 而无需登录，便于隔离测试聊天 UI。
 
 ## 测试体系
 
